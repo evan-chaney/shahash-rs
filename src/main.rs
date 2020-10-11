@@ -6,6 +6,21 @@ const D: u16 = 512; // output size
 const C: u16 = 1024; // capacity
 const W: u16 = 64; // word size
 
+#[cfg(test)]
+mod tests {
+
+    // Pull all the imports from the rest of this file
+    use super::*;
+
+    #[test]
+    fn verify_pad() {
+        for r in 1..1000 {
+            let mut v = bitvec![1, 0, 0, 1];
+            assert_eq!(pad(&mut v, r).len() % r as usize, 0 as usize);
+        }
+    }
+}
+
 // Padding function
 fn pad(n: &mut BitVec, rate: u16) -> &BitVec {
     // Add bit string 10*1 with as many zeros as it takes to become cleanly divisible by rate
