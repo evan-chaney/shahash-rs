@@ -4,6 +4,7 @@ use bitvec::prelude::*;
 const R: u16 = 576; // rate
 const D: u16 = 512; // output size
 const C: u16 = 1024; // capacity
+const W: u16 = 64; // word size
 
 // Padding function
 fn pad(n: &mut BitVec, rate: u16) -> &BitVec {
@@ -20,11 +21,16 @@ fn pad(n: &mut BitVec, rate: u16) -> &BitVec {
 }
 
 // Permutation/state transformation function
-fn permutate(block_width: u8, rate: u16, output_length: u16) {}
+fn permutate(block_width: u8, rate: u16, output_length: u16) {
+
+    // Endian here is little-endian
+    // State is a 5 x 5 x W (row, column, bit) array
+}
 
 fn main() {
     // N is our input bit string
     let mut n = bitvec![1, 1, 0, 1, 0, 0, 1, 1];
     println!("Length: {}", n.len());
     println!("Length: {}", pad(&mut n, R).len());
+    //    println!("AND: {}", &n & bitvec![0, 1, 1, 0]);
 }
