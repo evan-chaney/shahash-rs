@@ -62,13 +62,28 @@ fn permutate(A: &BitVec, word_size: u16, rate: u16, output_length: u16) {
     //let mut d: BitVec<LocalBits, usize> = BitVec::with_capacity(64);
 
     for x in 0..4 {
-        //c.insert(x, state[x][0] ^ state[x][1]);
+        c.insert(
+            x,
+            state[x][0].clone()
+                ^ state[x][1].clone()
+                ^ state[x][2].clone()
+                ^ state[x][3].clone()
+                ^ state[x][4].clone(),
+        );
+    }
+    for x in 0..4 {
+        let mut rotated_vec = c[x + 1].clone();
+        rotated_vec.rotate_right(1);
+        d.insert(x, c[x - 1].clone() ^ rotated_vec)
     }
 }
 
 fn main() {
     // N is our input bit string
     let mut n = bitvec![1, 1, 0, 1, 0, 0, 1, 1];
+    for x in 0..2000 {
+        n.insert(0, true);
+    }
     let mut padded_array = pad(&mut n, R);
     permutate(padded_array, W, R, D);
 
