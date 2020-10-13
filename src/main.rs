@@ -43,25 +43,27 @@ fn permutate(A: &BitVec, word_size: u16, rate: u16, output_length: u16) {
     let mut state: Vec<Vec<BitVec>> = Vec::with_capacity(5);
     let mut memoffset: usize = 0;
     // Do some wild seeding of the state array
-    for row in 0..4 {
+    for row in 0..5 {
         state.insert(row, Vec::with_capacity(5));
-        for col in 0..4 {
+        for col in 0..5 {
             state[row].insert(col, BitVec::with_capacity(word_size as usize));
 
             state[row][col] = A[memoffset..memoffset + word_size as usize].to_bitvec();
             memoffset += word_size as usize;
         }
+
+        assert_eq!(state[row].len(), 5);
     }
+    assert_eq!(state.len(), 5);
+
     // Initialize some intermediate variables
 
     let mut b: Vec<BitVec> = Vec::with_capacity(5);
     let mut c: Vec<BitVec> = Vec::with_capacity(5);
     let mut d: Vec<BitVec> = Vec::with_capacity(5);
-    //let mut b: BitVec<LocalBits, usize> = BitVec::with_capacity(64); // is 64 the right number here???
-    //let mut c: BitVec<LocalBits, usize> = BitVec::with_capacity(64);
-    //let mut d: BitVec<LocalBits, usize> = BitVec::with_capacity(64);
 
-    for x in 0..4 {
+    // theta
+    for x in 0..5 {
         c.insert(
             x,
             state[x][0].clone()
@@ -71,16 +73,29 @@ fn permutate(A: &BitVec, word_size: u16, rate: u16, output_length: u16) {
                 ^ state[x][4].clone(),
         );
     }
-    for x in 0..4 {
-        let mut rotated_vec = c[x + 1].clone();
+    for x in 0..5 {
+        let mut rotated_vec = c[(x + 1) % 5].clone();
         rotated_vec.rotate_right(1);
-        d.insert(x, c[x - 1].clone() ^ rotated_vec)
+        d.insert(x, c[(x + 1) % ].clone() ^ rotated_vec)
     }
+    for x in 0..5 {
+        for y in 0..5 {
+            state[x][y] = state[x][y].clone() ^ d[x].clone();
+        }
+    }
+    // end theta
+    // p and pi
+    
+    
+    //
 }
 
 fn main() {
     // N is our input bit string
     let mut n = bitvec![1, 1, 0, 1, 0, 0, 1, 1];
+    for x in 0..4 {
+        //        println!("My num: {}", x);
+    }
     for x in 0..2000 {
         n.insert(0, true);
     }
