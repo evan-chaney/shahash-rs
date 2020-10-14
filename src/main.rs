@@ -7,6 +7,22 @@ const C: u16 = 1024; // capacity
 const l: u16 = 6; // used to calculate word size and number of rounds
 const W: u16 = 64; //pow(2, l); // word size
 const Rounds: u16 = 12 + (2 * l); // Number of times the permutation is run
+
+// Offsets
+// Rotation offsets
+const Rotation_offsets: [[u8; 5]; 5] = [
+    // x = 0
+    [0, 36, 3, 41, 18],
+    // x = 1
+    [1, 44, 10, 45, 2],
+    // x = 2
+    [62, 6, 43, 15, 61],
+    // x = 3
+    [28, 55, 25, 21, 56],
+    // x = 4
+    [27, 20, 39, 8, 14],
+];
+
 #[cfg(test)]
 mod tests {
 
@@ -37,7 +53,7 @@ fn pad(n: &mut BitVec, rate: u16) -> &BitVec {
 }
 
 // Permutation/state transformation function
-fn permutate(A: &BitVec, word_size: u16, rate: u16, output_length: u16) {
+fn permutate(a: &BitVec, word_size: u16, rate: u16, output_length: u16) {
     // Endian here is little-endian
     // State is a 5 x 5 x W (row, column, bit) array
     let mut state: Vec<Vec<BitVec>> = Vec::with_capacity(5);
@@ -48,7 +64,7 @@ fn permutate(A: &BitVec, word_size: u16, rate: u16, output_length: u16) {
         for col in 0..5 {
             state[row].insert(col, BitVec::with_capacity(word_size as usize));
 
-            state[row][col] = A[memoffset..memoffset + word_size as usize].to_bitvec();
+            state[row][col] = a[memoffset..memoffset + word_size as usize].to_bitvec();
             memoffset += word_size as usize;
         }
 
@@ -76,7 +92,7 @@ fn permutate(A: &BitVec, word_size: u16, rate: u16, output_length: u16) {
     for x in 0..5 {
         let mut rotated_vec = c[(x + 1) % 5].clone();
         rotated_vec.rotate_right(1);
-        d.insert(x, c[(x + 1) % ].clone() ^ rotated_vec)
+        d.insert(x, c[(x + 1) % 5].clone() ^ rotated_vec)
     }
     for x in 0..5 {
         for y in 0..5 {
@@ -85,8 +101,18 @@ fn permutate(A: &BitVec, word_size: u16, rate: u16, output_length: u16) {
     }
     // end theta
     // p and pi
-    
-    
+
+    // manually seed b
+    for x in 0..5 {
+        b.insert(x, BitVec::with_capacity(5));
+    }
+    for x in 0..5 {
+        for y in 0..5 {
+            let mut rotated_vec = state[x][y].clone();
+            rotated_vec.rotate_right(Rotation_offsets[x][y] as usize);
+            //b[y].insert((3 * x + 3 * y) % 5, rotated_vec);
+        }
+    }
     //
 }
 
