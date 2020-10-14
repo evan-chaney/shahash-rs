@@ -6,11 +6,11 @@ const D: u16 = 512; // output size
 const C: u16 = 1024; // capacity
 const l: u16 = 6; // used to calculate word size and number of rounds
 const W: u16 = 64; //pow(2, l); // word size
-const Rounds: u16 = 12 + (2 * l); // Number of times the permutation is run
+const ROUNDS: u16 = 12 + (2 * l); // Number of times the permutation is run
 
 // Offsets
 // Rotation offsets
-const Rotation_offsets: [[u8; 5]; 5] = [
+const ROTATION_OFFSETS: [[u8; 5]; 5] = [
     // x = 0
     [0, 36, 3, 41, 18],
     // x = 1
@@ -106,14 +106,33 @@ fn permutate(a: &BitVec, word_size: u16, rate: u16, output_length: u16) {
     for x in 0..5 {
         b.insert(x, BitVec::with_capacity(5));
     }
-    for x in 0..5 {
-        for y in 0..5 {
-            let mut rotated_vec = state[x][y].clone();
-            rotated_vec.rotate_right(Rotation_offsets[x][y] as usize);
-            //b[y].insert((3 * x + 3 * y) % 5, rotated_vec);
-        }
+    //for x in 0..5 {
+    //    for y in 0..5 {
+    //        let mut rotated_vec = state[x][y].clone();
+    //        rotated_vec.rotate_right(Rotation_offsets[x][y] as usize);
+    //        //b[y].insert((3 * x + 3 * y) % 5, rotated_vec);
+    //    }
+    //}
+
+    // Redo this by adapting version from official Python implementation
+    let mut x: usize = 1;
+    let mut y: usize = 0;
+    let mut temp_x = 0;
+    let mut temp_y = 0;
+
+    let mut current: BitVec = state[x][y].clone();
+    for t in 0..24 {
+        temp_x = x.clone();
+        temp_y = y.clone();
+        x = y;
+        y = (2 * temp_x + 3 * temp_y) % 5;
+        let temp_current = current.clone();
+        current = state[x][y].clone();
+        let mut rotated_vec = temp_current.clone();
+        rotated_vec.rotate_right(ROTATION_OFFSETS[x][y] as usize);
+        state[x][y] = rotated_vec;
     }
-    //
+    // end p and pi
 }
 
 fn main() {
