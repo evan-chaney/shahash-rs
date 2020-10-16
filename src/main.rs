@@ -57,6 +57,7 @@ fn permutate(a: &BitVec, word_size: u16, rate: u16, output_length: u16) {
     // Endian here is little-endian
     // State is a 5 x 5 x W (row, column, bit) array
     let mut state: Vec<Vec<BitVec>> = Vec::with_capacity(5);
+    let mut r: usize = 1;
     let mut memoffset: usize = 0;
     // Do some wild seeding of the state array
     for row in 0..5 {
@@ -100,7 +101,7 @@ fn permutate(a: &BitVec, word_size: u16, rate: u16, output_length: u16) {
         }
     }
     // end theta
-    // p and pi
+    // ρ (rho) & π (pi)
 
     // manually seed b
     for x in 0..5 {
@@ -117,8 +118,8 @@ fn permutate(a: &BitVec, word_size: u16, rate: u16, output_length: u16) {
     // Redo this by adapting version from official Python implementation
     let mut x: usize = 1;
     let mut y: usize = 0;
-    let mut temp_x = 0;
-    let mut temp_y = 0;
+    let mut temp_x: usize;
+    let mut temp_y: usize;
 
     let mut current: BitVec = state[x][y].clone();
     for t in 0..24 {
@@ -133,6 +134,25 @@ fn permutate(a: &BitVec, word_size: u16, rate: u16, output_length: u16) {
         state[x][y] = rotated_vec;
     }
     // end p and pi
+    // χ (chi)
+    for y in 0..5 {
+        let mut t: Vec<BitVec> = Vec::with_capacity(5);
+        // Load t with data from state
+        for x in 0..5 {
+            t.insert(x, state[x][y].clone());
+        }
+
+        for x in 0..5 {
+            state[x][y] = t[x].clone() ^ ((!t[(x + 1) % 5].clone()) & t[(x + 2) % 5].clone());
+        }
+    }
+    // end chi
+    // ι (iota) step
+    for j in 0..7 {
+        r = 3; //fix me
+               //    state[0][0] = state[0][0] ^ r;
+    }
+    // end iota
 }
 
 fn main() {
