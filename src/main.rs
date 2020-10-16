@@ -122,7 +122,7 @@ fn permutate(a: &BitVec, word_size: u16, rate: u16, output_length: u16) {
     let mut temp_y: usize;
 
     let mut current: BitVec = state[x][y].clone();
-    for t in 0..24 {
+    for _ in 0..24 {
         temp_x = x.clone();
         temp_y = y.clone();
         x = y;
@@ -158,13 +158,10 @@ fn permutate(a: &BitVec, word_size: u16, rate: u16, output_length: u16) {
 fn main() {
     // N is our input bit string
     let mut n = bitvec![1, 1, 0, 1, 0, 0, 1, 1];
-    for x in 0..4 {
-        //        println!("My num: {}", x);
-    }
-    for x in 0..2000 {
+    for _ in 0..2000 {
         n.insert(0, true);
     }
-    let mut padded_array = pad(&mut n, R);
+    let padded_array = pad(&mut n, R);
     permutate(padded_array, W, R, D);
 
     //   println!("Test bitvec 32: {:?}", bitvec![32]);
