@@ -1,4 +1,8 @@
 use bitvec::prelude::*;
+use pretty_assertions::{assert_eq, assert_ne};
+extern crate pretty_env_logger;
+#[macro_use]
+extern crate log;
 
 // SHA-160 parameters
 //const R: u16 = 576; // rate
@@ -31,10 +35,12 @@ mod tests {
 
     // Pull all the imports from the rest of this file
     use super::*;
-
+    #[cfg(test)]
+    use pretty_assertions::{assert_eq, assert_ne};
     #[test]
     fn verify_pad() {
-        let mut v = bitvec![1, 0, 0, 1];
+        let mut v = bitvec![1, 1, 1, 1];
+        v.resize(40, true);
         assert_eq!(pad(&mut v).len() % 512 as usize, 0 as usize);
     }
 }
@@ -46,16 +52,30 @@ fn pad(n: &mut BitVec) -> &BitVec {
 
     let mut trailing_words: BitVec<Lsb0, usize> = BitVec::new();
     // start with the first 1 bit
-    if n.len() < 2u64.pow(32) as usize {
+    if n.len() < 32 {
+        trace!("n len triggered as less than 2**32");
+        trace!("trailing len: {}", trailing_words.len());
         //while trailing_words.len() < (32 - n.len()) {
         //    n.push(false);
         //}
         //trailing_words.extend(&vec![false; (32 as usize - n.len()) - trailing_words.len()]);
-        trailing_words.resize(2u64.pow(32) as usize - n.len(), false);
+        trailing_words.resize(32 - n.len(), false);
+        trace!("Trailing words resized, new len: {}", trailing_words.len());
     }
 
-    trailing_words.resize(512, true);
+    trailing_words.resize(
+        trailing_words.len() + (512 - ((trailing_words.len() + n.len()) % 512)),
+        true,
+    );
+
+    trace!("Trailing words resized, new len: {}", trailing_words.len());
+    trace!(
+        "Trailing words resized, new mod 512: {}",
+        trailing_words.len() % 512
+    );
+    trace!("About to extend n, current len: {}", n.len());
     n.extend(trailing_words);
+    trace!("n extended, new len: {}", n.len());
     return n;
 }
 
@@ -161,9 +181,10 @@ fn permutate(a: &BitVec, word_size: u16, rate: u16, output_length: u16) {
 }
 
 fn main() {
+    pretty_env_logger::init();
     // N is our input bit string
     let mut n = bitvec![1, 1, 0, 1, 0, 0, 1, 1];
-    for _ in 0..2000 {
+    for _ in 0..33 {
         n.insert(0, true);
     }
     let padded_array = pad(&mut n);
