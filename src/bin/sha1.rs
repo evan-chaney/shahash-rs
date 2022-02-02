@@ -1,4 +1,5 @@
 use bitvec::prelude::*;
+use num_bigint::BigUint;
 use pretty_assertions::{assert_eq, assert_ne};
 extern crate pretty_env_logger;
 #[macro_use]
@@ -12,7 +13,7 @@ const C: u16 = 1024; // capacity
 const l: u16 = 6; // used to calculate word size and number of rounds
 const W: u16 = 64; //pow(2, l); // word size
 const ROUNDS: u16 = 12 + (2 * l); // Number of times the permutation is run
-
+const FINAL_PAD: [u8; 4] = 0x0000000000000028u32.to_ne_bytes();
 // Offsets
 // Rotation offsets
 const ROTATION_OFFSETS: [[u8; 5]; 5] = [
@@ -44,145 +45,29 @@ mod tests {
         assert_eq!(pad(&mut v).len() % 512 as usize, 0 as usize);
 
         // Use example from IETF docs https://tools.ietf.org/html/rfc3174
-        let mut v2 = bitvec![Lsb0, usize; 0b0110000101100010011000110110010001100101u64];
+        //let mut v2 = bitvec![Lsb0, usize; 0b0110000101100010011000110110010001100101u64];
 
-        //assert_eq!(
-        //    pad(&mut v2),
-        //    &bitvec![Lsb0, usize;
-        //        0x6,
-        //        0x1,
-        //        0x6,
-        //        0x2,
-        //        0x6,
-        //        0x3,
-        //        0x6,
-        //        0x4,
-        //        0x6,
-        //        0x5,
-        //        0x8,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x0,
-        //        0x2,
-        //        0x8
-        //    ]
-        //);
+        //let mut v2 =
+        //    BitSlice::<Lsb0, _>::from_element(&0b0110000101100010011000110110010001100101usize)
+        //        .to_bitvec();
+        let mut v2 = 0b0110000101100010011000110110010001100101usize.to_ne_bytes();
+        // This is what the padding function will be checked against
+        let target_pad: Vec<u8> = vec![
+            0x6, 0x1, 0x6, 0x2, 0x6, 0x3, 0x6, 0x4, 0x6, 0x5, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+            0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+            0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+            0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+            0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+            0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+            0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+            0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x8,
+        ];
+        //assert_eq!(pad_input(&mut v2), BigUint::new(target_pad).to_bytes_be());
+        assert_eq!(pad_input(&mut v2), target_pad);
     }
 }
 
-// Padding function
+// Padding output function
 fn pad(n: &mut BitVec) -> &BitVec {
     // Add bit string 1{1}0* with as many zeros as it takes to become cleanly divisible by 448
     // and then a 64-bit int (2 words) to make it divisible by 512
@@ -214,6 +99,50 @@ fn pad(n: &mut BitVec) -> &BitVec {
     n.extend(trailing_words);
     trace!("n extended, new len: {}", n.len());
     return n;
+}
+
+fn pad_input2(n: &mut BitVec) -> &BitVec {
+    let rate = 256;
+    // Add bit string 10*1 with as many zeros as it takes to become cleanly divisible by rate
+    // but add at least 11 if it is cleanly divisible to start
+
+    println!("pad_input called with n length: {}", n.len());
+
+    // start with the first 1 bit
+    n.push(true);
+    while (n.len() % rate as usize) < (rate as usize - 65) {
+        n.push(false);
+    }
+    n.push(true);
+    n.extend(bitvec![
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x8
+    ]);
+    return n;
+}
+
+fn pad_input(n: &mut [u8]) -> Vec<u8> {
+    let rate = 256;
+    // Add bit string 10*1 with as many zeros as it takes to become cleanly divisible by rate
+    // but add at least 11 if it is cleanly divisible to start
+
+    println!("pad_input called with n length: {}", n.len());
+
+    let mut padding: Vec<u8> = Vec::new();
+    // start with the first 1 bit
+    padding.push(0x1);
+    while ((n.len() + padding.len()) % rate as usize) < (rate as usize - 65) {
+        padding.push(0x0);
+    }
+    padding.push(0x1);
+
+    padding.extend([
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x8,
+    ]);
+    let mut output_vec: Vec<u8> = Vec::new();
+    output_vec.extend(n.to_vec());
+    output_vec.extend(padding);
+
+    return output_vec;
 }
 
 // Permutation/state transformation function
@@ -324,6 +253,7 @@ fn main() {
     for _ in 0..33 {
         n.insert(0, true);
     }
+    // TODO use padded_input here?
     let padded_array = pad(&mut n);
     //permutate(padded_array, W, R, D);
 
